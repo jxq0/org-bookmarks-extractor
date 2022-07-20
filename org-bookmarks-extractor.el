@@ -29,6 +29,14 @@
 (require 'cl-lib)
 (require 'org-element)
 
+(defgroup org-bookmarks-extractor nil
+  "Extract bookmarks from Org mode."
+  :group 'org)
+
+(defcustom org-bookmarks-extractor-html-file nil
+  "Html file path."
+  :type 'string)
+
 (cl-defstruct (org-bookmarks-extractor-url
                (:constructor org-bookmarks-extractor-url-create)
                (:copier nil))
@@ -92,16 +100,26 @@
     result))
 
 (defun org-bookmarks-extractor--extract (org-file html-file)
-  "Extract ORG-FILE into HTML-FILE."
+  "Extract bookmarks from ORG-FILE into HTML-FILE."
   (with-temp-buffer
     (insert (org-bookmarks-extractor--to-html
-             (org-bookmarks-extractor--walk (org-bookmarks-extractor-parse org-file))))
+             (org-bookmarks-extractor--walk
+              (org-bookmarks-extractor-parse org-file))))
     (write-file html-file)))
 
 (defun org-bookmarks-extractor-extract ()
   "Extract bookmarks."
-  (interactive "P")
-  )
+  (interactive)
+  (let* ((cur-file (buffer-file-name))
+         (html-file
+          (or org-bookmarks-extractor-html-file
+              (file-name-with-extension
+               (concat (file-name-as-directory (file-name-directory cur-file))
+                       (file-name-base cur-file))
+               "html"))))
+    (unless (eq major-mode 'org-mode)
+      (user-error "Not a org-mode file"))
+    (org-bookmarks-extractor--extract cur-file html-file)))
 
 ;;;; Footer
 
