@@ -74,19 +74,22 @@
 
       ('link (let* ((raw-link (org-element-property :raw-link data))
                     (title (substring-no-properties
-                            (org-element-interpret-data (org-element-contents data)))))
+                            (org-element-interpret-data contents))))
                (list (org-bookmarks-extractor-url-create :title title :url raw-link))))
 
       (_ (mapcan #'org-bookmarks-extractor--walk contents)))))
 
 (defun org-bookmarks-extractor--to-html (data)
   "Convert DATA returned by `org-bookmarks-extractor--walk' into html."
-  (let* ((title (format "<h3>%s</h3>" (car data)))
+  (let* ((raw-title (car data))
+         (title (if (string= raw-title "root")
+                    (format "<H3 personal_toolbar_folder=\"true\">Bookmark Toolbar</H3>")
+                    (format "<H3>%s</H3>" raw-title)))
          (links-data (car (nth 1 data)))
          (links (if links-data
                     (mapconcat
                      (lambda (x)
-                       (format "<dt><a href=\"%s\">%s</a></dt>"
+                       (format "<DT><A href=\"%s\">%s</A></DT>"
                                (org-bookmarks-extractor-url-url x)
                                (org-bookmarks-extractor-url-title x)))
                      links-data "\n")
@@ -94,15 +97,19 @@
          (children-data (cdr (nth 1 data)))
          (children (mapconcat
                     (lambda (x)
-                      (format "<dt>%s</dt>" (org-bookmarks-extractor--to-html x)))
+                      (format "<DT>%s</DT>" (org-bookmarks-extractor--to-html x)))
                     children-data "\n"))
-         (result (format "%s\n<dl>%s\n%s</dl>" title links children)))
+         (result (format "%s\n<DL><p></p>%s\n%s</DL><p></p>" title links children)))
     result))
+
+(defun org-bookmarks-extractor--to-html-wrapper (data)
+  (let* ((raw-result (org-bookmarks-extractor--to-html data)))
+    (format "<!DOCTYPE netscape-bookmark-file-1><HTML><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>Bookmarks</title></head><BODY><H1>Bookmarks</H1><dl><p>\n</p><dt>%s</dt></dl></BODY></HTML>" raw-result)))
 
 (defun org-bookmarks-extractor--extract (org-file html-file)
   "Extract bookmarks from ORG-FILE into HTML-FILE."
   (with-temp-buffer
-    (insert (org-bookmarks-extractor--to-html
+    (insert (org-bookmarks-extractor--to-html-wrapper
              (org-bookmarks-extractor--walk
               (org-bookmarks-extractor-parse org-file))))
     (write-file html-file)))
