@@ -82,15 +82,17 @@
 (defun org-bookmarks-extractor--to-html (data)
   "Convert DATA returned by `org-bookmarks-extractor--walk' into html."
   (let* ((raw-title (car data))
+         (timestamp (format-time-string "%s"))
          (title (if (string= raw-title "root")
-                    (format "<H3 personal_toolbar_folder=\"true\">Bookmark Toolbar</H3>")
-                    (format "<H3>%s</H3>" raw-title)))
+                    (format "\n<H3 PERSONAL_TOOLBAR_FOLDER=\"true\">Bookmark Toolbar</H3>")
+                    (format "\n<H3>%s</H3>" raw-title)))
          (links-data (car (nth 1 data)))
          (links (if links-data
                     (mapconcat
                      (lambda (x)
-                       (format "<DT><A href=\"%s\">%s</A></DT>"
+                       (format "<DT><A HREF=\"%s\" ADD_DATE=\"%s\">%s</A></DT>"
                                (org-bookmarks-extractor-url-url x)
+                               timestamp
                                (org-bookmarks-extractor-url-title x)))
                      links-data "\n")
                   ""))
@@ -104,7 +106,7 @@
 
 (defun org-bookmarks-extractor--to-html-wrapper (data)
   (let* ((raw-result (org-bookmarks-extractor--to-html data)))
-    (format "<!DOCTYPE netscape-bookmark-file-1><HTML><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>Bookmarks</title></head><BODY><H1>Bookmarks</H1><dl><p>\n</p><dt>%s</dt></dl></BODY></HTML>" raw-result)))
+    (format "<!DOCTYPE netscape-bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p></p><DT>%s</DT></DL><p>" raw-result)))
 
 (defun org-bookmarks-extractor--extract (org-file html-file)
   "Extract bookmarks from ORG-FILE into HTML-FILE."
