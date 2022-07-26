@@ -79,34 +79,38 @@
 
       (_ (mapcan #'org-bookmarks-extractor--walk contents)))))
 
-(defun org-bookmarks-extractor--to-html (data)
+(defun org-bookmarks-extractor--to-html (data level)
   "Convert DATA returned by `org-bookmarks-extractor--walk' into html."
   (let* ((raw-title (car data))
+         (indent (make-string (* level 4) 32))
+         (links-indent (make-string (* (+ 1 level) 4) 32))
          (timestamp (format-time-string "%s"))
          (title (if (string= raw-title "root")
-                    (format "\n<H3 PERSONAL_TOOLBAR_FOLDER=\"true\">Bookmark Toolbar</H3>")
-                    (format "\n<H3>%s</H3>" raw-title)))
+                    (format "\n%s<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">Bookmark Toolbar</H3>" indent)
+                    (format "\n%s<DT><H3>%s</H3>" indent raw-title)))
          (links-data (car (nth 1 data)))
          (links (if links-data
                     (mapconcat
                      (lambda (x)
-                       (format "<DT><A HREF=\"%s\" ADD_DATE=\"%s\">%s</A></DT>"
+                       (format "\n%s<DT><A HREF=\"%s\" ADD_DATE=\"%s\">%s</A>"
+                               links-indent
                                (org-bookmarks-extractor-url-url x)
                                timestamp
                                (org-bookmarks-extractor-url-title x)))
-                     links-data "\n")
+                     links-data "")
                   ""))
          (children-data (cdr (nth 1 data)))
          (children (mapconcat
                     (lambda (x)
-                      (format "<DT>%s</DT>" (org-bookmarks-extractor--to-html x)))
-                    children-data "\n"))
-         (result (format "%s\n<DL><p></p>%s\n%s</DL><p></p>" title links children)))
+                      (format "%s"
+                              (org-bookmarks-extractor--to-html x (+ 1 level))))
+                    children-data ""))
+         (result (format "%s\n%s<DL><p>%s%s\n%s</DL><p>" title indent links children indent)))
     result))
 
 (defun org-bookmarks-extractor--to-html-wrapper (data)
-  (let* ((raw-result (org-bookmarks-extractor--to-html data)))
-    (format "<!DOCTYPE netscape-bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p></p><DT>%s</DT></DL><p>" raw-result)))
+  (let* ((raw-result (org-bookmarks-extractor--to-html data 1)))
+    (format "<!DOCTYPE netscape-bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>%s\n</DL><p>" raw-result)))
 
 (defun org-bookmarks-extractor--extract (org-file html-file)
   "Extract bookmarks from ORG-FILE into HTML-FILE."
