@@ -102,8 +102,7 @@
          (children-data (cdr (nth 1 data)))
          (children (mapconcat
                     (lambda (x)
-                      (format "%s"
-                              (org-bookmarks-extractor--to-html x (+ 1 level))))
+                      (org-bookmarks-extractor--to-html x (+ 1 level)))
                     children-data ""))
          (result (format "%s\n%s<DL><p>%s%s\n%s</DL><p>" title indent links children indent)))
     result))
