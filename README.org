@@ -1,0 +1,10 @@
+* Org Mode Bookmarks Extractor
+This tool can extract web bookmarks from org-mode files into html files which you can import into web browsers.
+
+** Why?
+I always use an org-mode file to manage all my bookmarks. There are several advantages:
+
+- All bookmarks in one place. No conflict between different browsers.
+- Easy to edit. If you use browser to manage bookmarks, it is not so convenient to change bookmarks hierarchy, or rearrange them. You have to do a lot of mouse clicking.
+
+** Usage
