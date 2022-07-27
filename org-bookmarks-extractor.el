@@ -80,7 +80,8 @@
       (_ (mapcan #'org-bookmarks-extractor--walk contents)))))
 
 (defun org-bookmarks-extractor--to-html (data level)
-  "Convert DATA returned by `org-bookmarks-extractor--walk' into html."
+  "Convert DATA returned by `org-bookmarks-extractor--walk' into html.
+LEVEL is used for indent."
   (let* ((raw-title (car data))
          (indent (make-string (* level 4) 32))
          (links-indent (make-string (* (+ 1 level) 4) 32))
@@ -108,6 +109,7 @@
     result))
 
 (defun org-bookmarks-extractor--to-html-wrapper (data)
+  "Wrapper for org-bookmarks-extractor--to-html.  DATA is the org-data."
   (let* ((raw-result (org-bookmarks-extractor--to-html data 1)))
     (format "<!DOCTYPE netscape-bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>%s\n</DL><p>" raw-result)))
 
