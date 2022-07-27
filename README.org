@@ -7,4 +7,7 @@ I always use an org-mode file to manage all my bookmarks. There are several adva
 - All bookmarks in one place. No conflict between different browsers.
 - Easy to edit. If you use browser to manage bookmarks, it is not so convenient to change bookmarks hierarchy, or rearrange them. You have to do a lot of mouse clicking.
 
+But there is a disadvantage, everytime I want to access a bookmark I have to open the org-mode file. What if I can open it directly in my browser? So I made this tool to extract bookmarks from org-mode file into html file, then import it into every browser.
+
 ** Usage
+Just open your bookmark org-mode file and ~M-x org-bookmarks-extractor-extract~. It will create a html file in the same directory.
