@@ -5,7 +5,7 @@
 ;; Author: Xuqing Jia <jxq@jxq.me>
 ;; URL: https://github.com/jxq0/org-bookmarks-extractor
 ;; Version: 0.1
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: convenience, org
 
 ;;; License:
@@ -24,6 +24,8 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+;; This tool can extract web bookmarks from org-mode files into html files
+;; which you can import into web browsers.
 
 ;;; Code:
 (require 'cl-lib)

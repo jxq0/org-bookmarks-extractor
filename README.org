@@ -11,3 +11,10 @@ But there is a disadvantage, everytime I want to access a bookmark I have to ope
 
 ** Usage
 Just open your bookmark org-mode file and ~M-x org-bookmarks-extractor-extract~. It will create a html file in the same directory.
+
+** Screenshot
+The original org-mode file:
+[[images/org-mode.png]]
+
+Bookmarks in browser after import:
+[[images/browser.png]]
