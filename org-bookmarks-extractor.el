@@ -126,6 +126,7 @@ LEVEL is used for indent."
               (org-bookmarks-extractor-parse org-file))))
     (write-file html-file)))
 
+;;;###autoload
 (defun org-bookmarks-extractor-extract ()
   "Extract bookmarks."
   (interactive)
