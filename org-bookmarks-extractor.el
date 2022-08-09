@@ -57,9 +57,6 @@
         (cons nil orig-result)
       orig-result)))
 
-(defun org-bookmarks-extractor--filter-empty-headings (data)
-  (pp data))
-
 (defun org-bookmarks-extractor--walk (data)
   "Walk DATA and return a list like (TITLE (LINKS CHILD1 CHILD2 ...))."
   (let ((data-type (org-element-type data))
