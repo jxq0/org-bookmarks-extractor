@@ -40,6 +40,9 @@
   "Html file path."
   :type 'string)
 
+(defvar-local org-bookmarks-extractor-root-title nil
+  "Bookmarks root title.")
+
 (cl-defstruct (org-bookmarks-extractor-url
                (:constructor org-bookmarks-extractor-url-create)
                (:copier nil))
@@ -58,13 +61,12 @@
     (_ t)))
 
 (defun org-bookmarks-extractor--prepend-nil (data orig-result)
-  "Filter empty headings from ORIG-RESULT.  Prepend nil into ORIG-RESULT if DATA only has headline children."
+  "Filter empty headings from ORIG-RESULT.
+Prepend nil into ORIG-RESULT if DATA only has headline children."
   (let* ((first-child (org-element-type (car (org-element-contents data))))
          (filtered-result (seq-filter
                            #'org-bookmarks-extractor--is-empty-headings
                            orig-result)))
-    (print (format "orig result %s" orig-result))
-    (print (format "filtered result %s" filtered-result))
     (if (eq first-child 'headline)
         (cons nil filtered-result)
       filtered-result)))
@@ -103,7 +105,7 @@ LEVEL is used for indent."
          (links-indent (make-string (* (+ 1 level) 4) 32))
          (timestamp (format-time-string "%s"))
          (title (if (string= raw-title "root")
-                    (format "\n%s<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">Bookmark Toolbar</H3>" indent)
+                    (format "\n%s<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">%s</H3>" indent org-bookmarks-extractor-root-title)
                     (format "\n%s<DT><H3>%s</H3>" indent raw-title)))
          (links-data (car (nth 1 data)))
          (links (if links-data
@@ -132,6 +134,10 @@ LEVEL is used for indent."
 (defun org-bookmarks-extractor--extract (org-file html-file)
   "Extract bookmarks from ORG-FILE into HTML-FILE."
   (with-temp-buffer
+    (setq org-bookmarks-extractor-root-title
+          (format "%s-%s"
+                  (file-name-base org-file)
+                  (format-time-string "%Y-%m-%d %H:%M")))
     (insert (org-bookmarks-extractor--to-html-wrapper
              (org-bookmarks-extractor--walk
               (org-bookmarks-extractor-parse org-file))))
