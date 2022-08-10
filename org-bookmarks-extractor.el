@@ -30,6 +30,7 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'org-element)
+(require 'seq)
 
 (defgroup org-bookmarks-extractor nil
   "Extract bookmarks from Org mode."
@@ -50,18 +51,26 @@
     (insert-file-contents org-file)
     (org-element-parse-buffer)))
 
-(defun org-bookmarks-extractor--prepend-nil (data orig-result)
-  "Prepend nil into ORIG-RESULT if DATA only has headline children."
-  (let* ((first-child (org-element-type (car (org-element-contents data)))))
-    (if (eq first-child 'headline)
-        (cons nil orig-result)
-      orig-result)))
+(defun org-bookmarks-extractor--is-empty-headings (data)
+  "Check if DATA is an empty heading without links."
+  (pcase data
+    (`(,heading (nil)) nil)
+    (_ t)))
 
-(defun org-bookmarks-extractor--filter-empty-headings (data)
-  (pp data))
+(defun org-bookmarks-extractor--prepend-nil (data orig-result)
+  "Filter empty headings from ORIG-RESULT.  Prepend nil into ORIG-RESULT if DATA only has headline children."
+  (let* ((first-child (org-element-type (car (org-element-contents data))))
+         (filtered-result (seq-filter
+                           #'org-bookmarks-extractor--is-empty-headings
+                           orig-result)))
+    (print (format "orig result %s" orig-result))
+    (print (format "filtered result %s" filtered-result))
+    (if (eq first-child 'headline)
+        (cons nil filtered-result)
+      filtered-result)))
 
 (defun org-bookmarks-extractor--walk (data)
-  "Walk DATA and return a list like (TITLE (LINKS CHILD1 CHILD2 ...))."
+  "Walk DATA and return a list like (TITLE ((LINK1 LINK2 ...) CHILD1 CHILD2 ...))."
   (let ((data-type (org-element-type data))
         (contents (org-element-contents data)))
     (pcase data-type
@@ -80,7 +89,9 @@
       ('link (let* ((raw-link (org-element-property :raw-link data))
                     (title (substring-no-properties
                             (org-element-interpret-data contents))))
-               (list (org-bookmarks-extractor-url-create :title title :url raw-link))))
+               (list (org-bookmarks-extractor-url-create
+                      :title title
+                      :url raw-link))))
 
       (_ (mapcan #'org-bookmarks-extractor--walk contents)))))
 
@@ -114,7 +125,7 @@ LEVEL is used for indent."
     result))
 
 (defun org-bookmarks-extractor--to-html-wrapper (data)
-  "Wrapper for org-bookmarks-extractor--to-html.  DATA is the org-data."
+  "Wrapper for `org-bookmarks-extractor--to-html'.  DATA is the org-data."
   (let* ((raw-result (org-bookmarks-extractor--to-html data 1)))
     (format "<!DOCTYPE netscape-bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>%s\n</DL><p>" raw-result)))
 
