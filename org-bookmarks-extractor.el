@@ -31,6 +31,7 @@
 (require 'cl-lib)
 (require 'org-element)
 (require 'seq)
+(require 'ox-html)
 
 (defgroup org-bookmarks-extractor nil
   "Extract bookmarks from Org mode."
@@ -158,6 +159,19 @@ LEVEL is used for indent."
     (unless (eq major-mode 'org-mode)
       (user-error "Not a org-mode file"))
     (org-bookmarks-extractor--extract cur-file html-file)))
+
+(defun org-bookmarks-extractor-export
+    (&optional async subtreep visible-only body-only ext-plist)
+  "Org export backend wrapper.
+ASYNC, SUBTREEP, VISIBLE-ONLY, BODY-ONLY, EXT-PLIST are simply ignored."
+  (org-bookmarks-extractor-extract))
+
+(org-export-define-derived-backend 'bookmarks 'html
+  :menu-entry
+  '(?h 3
+       ((?b "As Bookmarks HTML file"
+            (lambda (a s v b)
+              (org-bookmarks-extractor-export nil a s v b))))))
 
 ;;;; Footer
 
