@@ -88,12 +88,13 @@ Prepend nil into ORIG-RESULT if DATA only has headline children."
               data
               (mapcar #'org-bookmarks-extractor--walk contents))))
 
-      ('link (let* ((raw-link (org-element-property :raw-link data))
-                    (title (substring-no-properties
-                            (org-element-interpret-data contents))))
-               (list (org-bookmarks-extractor-url-create
-                      :title title
-                      :url raw-link))))
+      ('link (unless (string= "file" (org-element-property :type data))
+               (let* ((raw-link (org-element-property :raw-link data))
+                     (title (substring-no-properties
+                             (org-element-interpret-data contents))))
+                (list (org-bookmarks-extractor-url-create
+                       :title title
+                       :url raw-link)))))
 
       (_ (mapcan #'org-bookmarks-extractor--walk contents)))))
 
