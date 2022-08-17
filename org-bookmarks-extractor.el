@@ -30,6 +30,8 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'org-element)
+(require 'seq)
+(require 'ox-html)
 
 (defgroup org-bookmarks-extractor nil
   "Extract bookmarks from Org mode."
@@ -38,6 +40,9 @@
 (defcustom org-bookmarks-extractor-html-file nil
   "Html file path."
   :type 'string)
+
+(defvar-local org-bookmarks-extractor-root-title nil
+  "Bookmarks root title.")
 
 (cl-defstruct (org-bookmarks-extractor-url
                (:constructor org-bookmarks-extractor-url-create)
@@ -50,15 +55,25 @@
     (insert-file-contents org-file)
     (org-element-parse-buffer)))
 
+(defun org-bookmarks-extractor--is-empty-headings (data)
+  "Check if DATA is an empty heading without links."
+  (pcase data
+    (`(,heading (nil)) nil)
+    (_ t)))
+
 (defun org-bookmarks-extractor--prepend-nil (data orig-result)
-  "Prepend nil into ORIG-RESULT if DATA only has headline children."
-  (let* ((first-child (org-element-type (car (org-element-contents data)))))
+  "Filter empty headings from ORIG-RESULT.
+Prepend nil into ORIG-RESULT if DATA only has headline children."
+  (let* ((first-child (org-element-type (car (org-element-contents data))))
+         (filtered-result (seq-filter
+                           #'org-bookmarks-extractor--is-empty-headings
+                           orig-result)))
     (if (eq first-child 'headline)
-        (cons nil orig-result)
-      orig-result)))
+        (cons nil filtered-result)
+      filtered-result)))
 
 (defun org-bookmarks-extractor--walk (data)
-  "Walk DATA and return a list like (TITLE (LINKS CHILD1 CHILD2 ...))."
+  "Walk DATA and return a list like (TITLE ((LINK1 LINK2 ...) CHILD1 CHILD2 ...))."
   (let ((data-type (org-element-type data))
         (contents (org-element-contents data)))
     (pcase data-type
@@ -74,10 +89,13 @@
               data
               (mapcar #'org-bookmarks-extractor--walk contents))))
 
-      ('link (let* ((raw-link (org-element-property :raw-link data))
-                    (title (substring-no-properties
-                            (org-element-interpret-data contents))))
-               (list (org-bookmarks-extractor-url-create :title title :url raw-link))))
+      ('link (unless (string= "file" (org-element-property :type data))
+               (let* ((raw-link (org-element-property :raw-link data))
+                     (title (substring-no-properties
+                             (org-element-interpret-data contents))))
+                (list (org-bookmarks-extractor-url-create
+                       :title title
+                       :url raw-link)))))
 
       (_ (mapcan #'org-bookmarks-extractor--walk contents)))))
 
@@ -89,7 +107,7 @@ LEVEL is used for indent."
          (links-indent (make-string (* (+ 1 level) 4) 32))
          (timestamp (format-time-string "%s"))
          (title (if (string= raw-title "root")
-                    (format "\n%s<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">Bookmark Toolbar</H3>" indent)
+                    (format "\n%s<DT><H3 PERSONAL_TOOLBAR_FOLDER=\"true\">%s</H3>" indent org-bookmarks-extractor-root-title)
                     (format "\n%s<DT><H3>%s</H3>" indent raw-title)))
          (links-data (car (nth 1 data)))
          (links (if links-data
@@ -111,13 +129,17 @@ LEVEL is used for indent."
     result))
 
 (defun org-bookmarks-extractor--to-html-wrapper (data)
-  "Wrapper for org-bookmarks-extractor--to-html.  DATA is the org-data."
+  "Wrapper for `org-bookmarks-extractor--to-html'.  DATA is the org-data."
   (let* ((raw-result (org-bookmarks-extractor--to-html data 1)))
     (format "<!DOCTYPE netscape-bookmark-file-1>\n<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n<TITLE>Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>%s\n</DL><p>" raw-result)))
 
 (defun org-bookmarks-extractor--extract (org-file html-file)
   "Extract bookmarks from ORG-FILE into HTML-FILE."
   (with-temp-buffer
+    (setq org-bookmarks-extractor-root-title
+          (format "%s-%s"
+                  (file-name-base org-file)
+                  (format-time-string "%Y-%m-%d %H:%M")))
     (insert (org-bookmarks-extractor--to-html-wrapper
              (org-bookmarks-extractor--walk
               (org-bookmarks-extractor-parse org-file))))
@@ -137,6 +159,19 @@ LEVEL is used for indent."
     (unless (eq major-mode 'org-mode)
       (user-error "Not a org-mode file"))
     (org-bookmarks-extractor--extract cur-file html-file)))
+
+(defun org-bookmarks-extractor-export
+    (&optional async subtreep visible-only body-only ext-plist)
+  "Org export backend wrapper.
+ASYNC, SUBTREEP, VISIBLE-ONLY, BODY-ONLY, EXT-PLIST are simply ignored."
+  (org-bookmarks-extractor-extract))
+
+(org-export-define-derived-backend 'bookmarks 'html
+  :menu-entry
+  '(?h 3
+       ((?b "As Bookmarks HTML file"
+            (lambda (a s v b)
+              (org-bookmarks-extractor-export nil a s v b))))))
 
 ;;;; Footer
 
