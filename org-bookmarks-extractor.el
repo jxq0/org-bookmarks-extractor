@@ -161,7 +161,7 @@ LEVEL is used for indent."
     (org-bookmarks-extractor--extract cur-file html-file)))
 
 (defun org-bookmarks-extractor-export
-    (&optional async subtreep visible-only body-only ext-plist)
+    (&optional _async _subtreep _visible-only _body-only _ext-plist)
   "Org export backend wrapper.
 ASYNC, SUBTREEP, VISIBLE-ONLY, BODY-ONLY, EXT-PLIST are simply ignored."
   (org-bookmarks-extractor-extract))
