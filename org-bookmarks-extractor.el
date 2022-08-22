@@ -139,7 +139,7 @@ LEVEL is used for indent."
     (setq org-bookmarks-extractor-root-title
           (format "%s-%s"
                   (file-name-base org-file)
-                  (format-time-string "%Y-%m-%d %H:%M")))
+                  (format-time-string "%F %H:%M")))
     (insert (org-bookmarks-extractor--to-html-wrapper
              (org-bookmarks-extractor--walk
               (org-bookmarks-extractor-parse org-file))))
