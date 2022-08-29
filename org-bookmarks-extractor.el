@@ -5,7 +5,7 @@
 ;; Author: Xuqing Jia <jxq@jxq.me>
 ;; URL: https://github.com/jxq0/org-bookmarks-extractor
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: convenience, org
 
 ;;; License:
@@ -152,9 +152,10 @@ LEVEL is used for indent."
   (let* ((cur-file (buffer-file-name))
          (html-file
           (or org-bookmarks-extractor-html-file
-              (file-name-with-extension
+              (concat
                (concat (file-name-as-directory (file-name-directory cur-file))
                        (file-name-base cur-file))
+               "."
                "html"))))
     (unless (eq major-mode 'org-mode)
       (user-error "Not a org-mode file"))
